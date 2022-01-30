@@ -10,13 +10,13 @@ import (
 func main() {
 
 	// All public routes are populated here
-	s, err := analyzer.New()
+	handler, err := analyzer.New()
 	if err != nil {
 		log.WithError(err).Error("error creating API")
 		return
 	}
 
-	err = http.ListenAndServe(":8080", s)
+	err = http.ListenAndServe(":4200", handler)
 	if err != nil {
 		log.WithError(err).Error("error starting  API ")
 		return

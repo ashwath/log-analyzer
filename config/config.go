@@ -24,4 +24,5 @@ func Get() Config {
 // in the configuration panel that is populated by clipper using the configuration-schema.yaml
 type Config struct {
 	// config schema values
+	NumberOfLogLines int `default:"10"`
 }

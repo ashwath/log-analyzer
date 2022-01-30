@@ -1,0 +1,7 @@
+version: "2.3"
+services:
+  log-analyzer:
+    image: log-analyzer
+    container_name: log-analyzer
+    ports:
+      - "4200:4200"
