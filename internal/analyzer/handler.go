@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	getSearchPath = "/v1/search"
-	getTailPath   = "/v1/tail"
+	getSearchPath = "/v1/logs/search"
+	getTailPath   = "/v1/logs/tail"
 )
 
 // Handler implements http.Handler

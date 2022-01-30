@@ -4,23 +4,28 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func (h *Handler) tailLogs(w http.ResponseWriter, r *http.Request) error {
+	log.Infof("http.Request: %+v\n", *r)
+
 	// fetch Filename
 	fileName, err := GetFileName(r)
 	if err != nil {
 		return err
 	}
+	log.Infof("filename: %+v\n", fileName)
 
 	// fetch number of log lines requested
 	logLines, err := GetLogLinesRequested(r)
 	if err != nil {
 		return err
 	}
+	log.Infof("logLines: %+v\n", logLines)
 
 	// fetch corresponding log lines
 	lastNLogLines, err := h.fetchLastN(fileName, logLines)

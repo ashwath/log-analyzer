@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -14,8 +13,8 @@ const (
 )
 
 func GetFileName(r *http.Request) (string, error) {
-	vars := mux.Vars(r)
-	fileName := vars["filename"]
+	fileName := r.FormValue("filename")
+	log.Infof("GetFileName():fileName: %+v\n", fileName)
 	if len(fileName) == 0 {
 		log.WithError(errors.New("filename not provided"))
 		return fileName, errors.New("filename not provided")
@@ -24,10 +23,8 @@ func GetFileName(r *http.Request) (string, error) {
 }
 
 func GetLogLinesRequested(r *http.Request) (int, error) {
-	vars := mux.Vars(r)
-	logLinesStr := vars["logLines"]
+	logLinesStr := r.FormValue("logLines")
 	logLines, err := strconv.Atoi(logLinesStr)
-
 	if err != nil || logLines == 0 {
 		// log and swallow it
 		log.WithError(err).Error("invalid input for 'logLines'")
