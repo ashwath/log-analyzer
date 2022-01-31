@@ -3,7 +3,6 @@ package analyzer
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -15,8 +14,9 @@ func (h *Handler) tailLogs(w http.ResponseWriter, r *http.Request) error {
 
 	// fetch Filename
 	fileName, err := GetFileName(r)
-	if err != nil {
-		return err
+	if len(fileName) == 0 {
+		log.WithError(fileNameErr)
+		return fileNameErr
 	}
 	log.Infof("filename: %+v\n", fileName)
 
@@ -25,24 +25,20 @@ func (h *Handler) tailLogs(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	log.Infof("logLines: %+v\n", logLines)
+	log.Infof("logs: %+v\n", logLines)
 
 	// fetch corresponding log lines
-	lastNLogLines, err := h.fetchLastN(fileName, logLines)
+	results, err := h.fetchLastN(fileName, logLines)
 	if err != nil {
 		return err
 	}
 
-	for _, v := range lastNLogLines {
-		fmt.Println(v)
-	}
-
 	// encode the results to http.ResponseWriter
 	enc := json.NewEncoder(w)
-	return enc.Encode(lastNLogLines)
+	return enc.Encode(results)
 }
 
-func (h *Handler) fetchLastN(fileName string, n int) ([]string, error) {
+func (h *Handler) fetchLastN(fileName string, n int) (SearchResponse, error) {
 	file, err := os.Open(logFilesPath + "/" + fileName)
 	if err != nil {
 		log.Fatal(err)
@@ -68,5 +64,5 @@ func (h *Handler) fetchLastN(fileName string, n int) ([]string, error) {
 		log.Fatal(err)
 	}
 
-	return result, nil
+	return SearchResponse{FileName: fileName, Logs: result}, nil
 }
