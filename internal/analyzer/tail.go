@@ -21,7 +21,7 @@ func (h *Handler) tailLogs(w http.ResponseWriter, r *http.Request) error {
 	log.Infof("filename: %+v\n", fileName)
 
 	// fetch number of log lines requested
-	logLines, err := GetLogLinesRequested(r)
+	logLines, err := GetLogEntryLimit(r)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (h *Handler) tailLogs(w http.ResponseWriter, r *http.Request) error {
 	return enc.Encode(results)
 }
 
-func (h *Handler) fetchLastN(fileName string, n int) (SearchResponse, error) {
+func (h *Handler) fetchLastN(fileName string, n int) (SearchResults, error) {
 	file, err := os.Open(logFilesPath + "/" + fileName)
 	if err != nil {
 		log.Fatal(err)
@@ -64,5 +64,5 @@ func (h *Handler) fetchLastN(fileName string, n int) (SearchResponse, error) {
 		log.Fatal(err)
 	}
 
-	return SearchResponse{FileName: fileName, Logs: result}, nil
+	return SearchResults{FileName: fileName, LogEntries: result}, nil
 }

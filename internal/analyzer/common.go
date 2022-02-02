@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	logFilesPath = "/var/log"
+	logFilesPath         = "/var/log"
+	defaultLogEntryLimit = 100
 )
 
 var (
@@ -18,9 +19,19 @@ var (
 	searchKeyWordErr  = errors.New("search keyword not provided")
 )
 
-type SearchResponse struct {
-	FileName string   `json:"file_path"`
-	Logs     []string `json:"logs"`
+type Response struct {
+	Results  []SearchResults  `json:"results"`
+	MetaData ResponseMetadata `json:"response_metadata"`
+}
+
+type SearchResults struct {
+	FileName   string   `json:"file_path"`
+	LogEntries []string `json:"log_entries"`
+}
+
+type ResponseMetadata struct {
+	CurrentFile string `json:"current_file"`
+	NextCursor  string `json:"next_cursor"`
 }
 
 func GetFileName(r *http.Request) (string, error) {
@@ -33,17 +44,20 @@ func GetFileName(r *http.Request) (string, error) {
 	return fileName, nil
 }
 
-func GetLogLinesRequested(r *http.Request) (int, error) {
-	logLinesStr := r.FormValue("log_lines")
-	logLines, err := strconv.Atoi(logLinesStr)
-	if err != nil || logLines == 0 {
+func GetLogEntryLimit(r *http.Request) (int, error) {
+	limitStr := r.FormValue("limit")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
 		log.WithError(err).Error(numberLogLinesErr)
 		return 0, numberLogLinesErr
 	}
-	return logLines, nil
+	if limit == 0 {
+		limit = defaultLogEntryLimit
+	}
+	return limit, nil
 }
 
-func GetSearchKeyWord(r *http.Request) (string, error) {
+func GetSearchKeyword(r *http.Request) (string, error) {
 	keyword := r.FormValue("keyword")
 	if len(keyword) == 0 {
 		log.WithError(errors.New("search keyword not provided"))
