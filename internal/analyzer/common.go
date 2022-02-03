@@ -16,7 +16,9 @@ const (
 var (
 	fileNameErr       = errors.New("filename not provided")
 	numberLogLinesErr = errors.New("invalid input for 'logs lines'")
+	nextCursorErr     = errors.New("invalid input for 'next cursor'")
 	searchKeyWordErr  = errors.New("search keyword not provided")
+	pagingMetadataErr = errors.New("invalid metadata provided to page the results")
 )
 
 type Response struct {
@@ -30,31 +32,54 @@ type SearchResults struct {
 }
 
 type ResponseMetadata struct {
-	CurrentFile string `json:"current_file"`
-	NextCursor  string `json:"next_cursor"`
+	NextFile   string `json:"next_file"`
+	NextCursor int64  `json:"next_cursor"`
 }
 
-func GetFileName(r *http.Request) (string, error) {
+func GetFileName(r *http.Request) string {
 	fileName := r.FormValue("file_name")
-	log.Infof("GetFileName():fileName: %+v\n", fileName)
+	log.Infof("GetFileName(): %+v\n", fileName)
 	//if len(fileName) == 0 {
 	//	log.WithError(fileNameErr)
 	//	return fileName, fileNameErr
 	//}
-	return fileName, nil
+	return fileName
 }
 
 func GetLogEntryLimit(r *http.Request) (int, error) {
+	limit := defaultLogEntryLimit
 	limitStr := r.FormValue("limit")
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil {
-		log.WithError(err).Error(numberLogLinesErr)
-		return 0, numberLogLinesErr
-	}
-	if limit == 0 {
-		limit = defaultLogEntryLimit
+	if len(limitStr) > 0 {
+		limitReq, err := strconv.Atoi(limitStr)
+		if err != nil {
+			log.WithError(err).Error(numberLogLinesErr)
+			return 0, numberLogLinesErr
+		}
+		if limitReq > 0 {
+			limit = limitReq
+		}
 	}
 	return limit, nil
+}
+
+func GetNextCursor(r *http.Request) (int64, error) {
+	cursor := int64(0)
+	cursorStr := r.FormValue("next_cursor")
+	if len(cursorStr) > 0 {
+		cursorProvided, err := strconv.ParseInt(cursorStr, 10, 64)
+		if err != nil || cursorProvided < 0 {
+			log.WithError(err).Error(nextCursorErr)
+			return cursor, nextCursorErr
+		}
+		cursor = cursorProvided
+	}
+	return cursor, nil
+}
+
+func GetNextFile(r *http.Request) string {
+	nextFile := r.FormValue("next_file")
+	log.Infof("GetNextFile(): %+v\n", nextFile)
+	return nextFile
 }
 
 func GetSearchKeyword(r *http.Request) (string, error) {

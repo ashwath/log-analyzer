@@ -13,7 +13,7 @@ func (h *Handler) tailLogs(w http.ResponseWriter, r *http.Request) error {
 	log.Infof("http.Request: %+v\n", *r)
 
 	// fetch Filename
-	fileName, err := GetFileName(r)
+	fileName := GetFileName(r)
 	if len(fileName) == 0 {
 		log.WithError(fileNameErr)
 		return fileNameErr

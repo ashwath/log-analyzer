@@ -31,7 +31,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 
 	// fetch filename
 	var allLogFiles bool
-	fileName, err := GetFileName(r)
+	fileName := GetFileName(r)
 	if len(fileName) == 0 {
 		allLogFiles = true
 		log.Infof("Requested to search across all log files, filename: %+v\n", fileName)
@@ -39,23 +39,48 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 		log.Infof("filename: %+v\n", fileName)
 	}
 
+	cursor, err := GetNextCursor(r)
+	if err != nil {
+		return err
+	}
+	log.Infof("cursor: %+v\n", cursor)
+
+	nextFile := GetNextFile(r)
+	if len(nextFile) == 0 && cursor != 0 {
+		return pagingMetadataErr
+	}
+
 	// Search in the logs
 	response := Response{}
+	startScaning := false
 	if allLogFiles {
 		/*
 			Filepath.Walk()
-			The files are walked in lexical order, which makes the output deterministic
+			The files are walked in lexical order, which makes the output deterministic.
+			We need the output to be deterministic for paging logic to work
 		*/
 		err := filepath.Walk(logFilesPath,
 			func(path string, info os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
-				log.Infof("path:%v, info.Size():%v\n", path, info.Size())
-				if !info.IsDir() {
-					err = ScanLogFile(path, keyword, limit, &response)
-					if err != nil {
-						return err
+				log.Debugf("path:%v, info.Size():%v\n", path, info.Size())
+				if len(nextFile) > 0 {
+					if path == nextFile {
+						startScaning = true
+					}
+					if startScaning && !info.IsDir() {
+						err = ScanLogFile(path, keyword, limit, cursor, &response)
+						if err != nil {
+							return err
+						}
+					}
+				} else {
+					if !info.IsDir() {
+						err = ScanLogFile(path, keyword, limit, cursor, &response)
+						if err != nil {
+							return err
+						}
 					}
 				}
 				return nil
@@ -66,7 +91,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		// fetch corresponding log lines
 		path := logFilesPath + "/" + fileName
-		err := ScanLogFile(path, keyword, limit, &response)
+		err := ScanLogFile(path, keyword, limit, cursor, &response)
 		if err != nil {
 			return err
 		}
@@ -78,7 +103,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func ScanLogFile(filepath, keyword string, limit int, response *Response) error {
+func ScanLogFile(filepath, keyword string, limit int, cursor int64, response *Response) error {
 	log.Infof("Scaning file: %v\n", filepath)
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -86,7 +111,7 @@ func ScanLogFile(filepath, keyword string, limit int, response *Response) error 
 	}
 	defer file.Close()
 
-	file.Seek(0, 0)
+	file.Seek(cursor, 0)
 	reader := bufio.NewReader(file)
 	logs := []string{}
 	for {
@@ -107,15 +132,28 @@ func ScanLogFile(filepath, keyword string, limit int, response *Response) error 
 			results := response.Results
 			results = append(results, SearchResults{FileName: filepath, LogEntries: logs})
 			response.Results = results
-			response.MetaData.CurrentFile = filepath
+			response.MetaData.NextFile = filepath
+			offset, err := file.Seek(0, io.SeekCurrent) // offset is the current position
+			if err != nil {
+				log.Errorf("Error while finindg file:%s offset %v\n", filepath, err)
+				return err
+			}
+			response.MetaData.NextCursor = offset + 1
+
 		}
 	}
+
 	if len(logs) > 0 {
 		results := response.Results
 		results = append(results, SearchResults{FileName: filepath, LogEntries: logs})
 		response.Results = results
-		response.MetaData.CurrentFile = filepath
-		response.MetaData.NextCursor = ""
+		response.MetaData.NextFile = filepath
+		offset, err := file.Seek(0, io.SeekCurrent) // offset is the current position
+		if err != nil {
+			log.Errorf("Error while finindg file:%s offset %v\n", filepath, err)
+			return err
+		}
+		response.MetaData.NextCursor = offset + 1
 	}
 	return nil
 }
