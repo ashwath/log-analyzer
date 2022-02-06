@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"encoding/json"
-	"io"
 	"logAnalyzer/internal/file_utils"
 	"net/http"
 	"os"
@@ -63,14 +62,14 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 						startScaning = true
 					}
 					if startScaning && !info.IsDir() {
-						err = ScanLogFile(path, keyword, limit, cursor, &response)
+						err = scanLogFile(path, keyword, limit, cursor, &response)
 						if err != nil {
 							return err
 						}
 					}
 				} else {
 					if !info.IsDir() {
-						err = ScanLogFile(path, keyword, limit, cursor, &response)
+						err = scanLogFile(path, keyword, limit, cursor, &response)
 						if err != nil {
 							return err
 						}
@@ -84,7 +83,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		// fetch corresponding log lines
 		path := logFilesPath + "/" + fileName
-		err := ScanLogFile(path, keyword, limit, cursor, &response)
+		err := scanLogFile(path, keyword, limit, cursor, &response)
 		if err != nil {
 			return err
 		}
@@ -95,8 +94,8 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	return enc.Encode(response)
 }
 
-func ScanLogFile(filepath, keyword string, limit int, cursor int64, response *Response) error {
-	log.Infof("Scaning file: %v\n", filepath)
+func scanLogFile(filepath, keyword string, limit int, cursor int64, response *Response) error {
+	log.Debugf("Scaning file: %v\n", filepath)
 	file, err := os.Open(filepath)
 	if err != nil {
 		log.Errorf("File not found, %v", err)
@@ -113,11 +112,11 @@ func ScanLogFile(filepath, keyword string, limit int, cursor int64, response *Re
 		cursor = fi.Size() // start with EOF and scan backwards
 	}
 
-	scanner := file_utils.NewScanner(file, cursor) // set pos to end of file
+	scanner := file_utils.NewBackwardScanner(file, cursor) // set pos to end of file
 	logs := []string{}
 	for {
 		// read a line
-		line, _, err := scanner.Line()
+		line, pos, err := scanner.Line()
 		if err != nil {
 			log.Error(err)
 			break
@@ -140,12 +139,7 @@ func ScanLogFile(filepath, keyword string, limit int, cursor int64, response *Re
 			results = append(results, SearchResults{FileName: filepath, LogEntries: logs})
 			response.Results = results
 			response.MetaData.NextFile = filepath
-			offset, err := file.Seek(0, io.SeekCurrent) // offset is the current position
-			if err != nil {
-				log.Errorf("Error while finindg file:%s offset %v\n", filepath, err)
-				return err
-			}
-			response.MetaData.NextCursor = offset
+			response.MetaData.NextCursor = pos
 			return nil
 		}
 	}

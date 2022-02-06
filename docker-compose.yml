@@ -5,3 +5,7 @@ services:
     container_name: log-analyzer
     ports:
       - "4200:4200"
+
+  tests:
+    image: tests
+    container_name: tests

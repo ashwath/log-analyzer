@@ -1,29 +1,36 @@
+// +build unit
+
 package file_utils
 
 import (
-	"fmt"
-	"os"
+	"strings"
 	"testing"
 )
 
-func TestNewScanner(t *testing.T) {
-	f, err := os.Open("../../sample-log-files/sample.log")
-	if err != nil {
-		panic(err)
-	}
-	fi, err := f.Stat()
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
+var (
+	src = "Start" + "\n" +
+		"Line1" + "\n" +
+		"Line2" + "\n" +
+		"Line3" + "\n" +
+		"End"
+	expected = "End" + "\n" +
+		"Line3" + "\n" +
+		"Line2" + "\n" +
+		"Line1" + "\n" +
+		"Start" + "\n"
+)
 
-	scanner := NewScanner(f, int(fi.Size()))
+func TestNewScanner(t *testing.T) {
+	scanner := NewBackwardScanner(strings.NewReader(src), int64(len(src)))
+	var output string
 	for {
 		line, _, err := scanner.Line()
 		if err != nil {
-			fmt.Println("Error:", err)
 			break
 		}
-		fmt.Printf("%s\n", line)
+		output = output + line + "\n"
+	}
+	if output != expected {
+		t.Errorf("Expected, %s\n to be equal to, %s\n", output, expected)
 	}
 }

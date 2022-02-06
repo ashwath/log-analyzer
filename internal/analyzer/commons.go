@@ -90,15 +90,13 @@ func GetNextCursor(r *http.Request) (int64, error) {
 
 func GetNextFile(r *http.Request) string {
 	nextFile := r.FormValue("next_file")
-	log.Infof("GetNextFile(): %+v\n", nextFile)
 	return nextFile
 }
 
 func GetSearchKeyword(r *http.Request) (string, error) {
 	keyword := r.FormValue("keyword")
 	if len(keyword) == 0 {
-		log.Infof("search keyword not provided")
-		//return keyword, errors.New("search keyword not provided")
+		log.Debugf("search keyword not provided")
 	}
 	return keyword, nil
 }

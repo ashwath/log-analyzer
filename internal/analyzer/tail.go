@@ -46,7 +46,7 @@ func (h *Handler) fetchLastN(fileName string, n int) (Response, error) {
 		return Response{}, err
 	}
 	defer f.Close()
-	scanner := file_utils.NewScanner(f, fi.Size()) // set pos to end of file
+	scanner := file_utils.NewBackwardScanner(f, fi.Size()) // set pos to end of file
 	logs := []string{}
 	for {
 		line, _, err := scanner.Line()

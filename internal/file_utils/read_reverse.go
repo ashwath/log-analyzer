@@ -7,18 +7,18 @@ import (
 
 const DefaultChunkSize = int64(1024)
 
-type Scanner struct {
+type BackwardScanner struct {
 	r   io.ReaderAt
 	pos int64
 	err error
 	buf []byte
 }
 
-func NewScanner(r io.ReaderAt, pos int64) *Scanner {
-	return &Scanner{r: r, pos: pos}
+func NewBackwardScanner(r io.ReaderAt, pos int64) *BackwardScanner {
+	return &BackwardScanner{r: r, pos: pos}
 }
 
-func (s *Scanner) readMore() {
+func (s *BackwardScanner) readMore() {
 	if s.pos == 0 {
 		s.err = io.EOF
 		return
@@ -37,7 +37,7 @@ func (s *Scanner) readMore() {
 	}
 }
 
-func (s *Scanner) Line() (line string, start int64, err error) {
+func (s *BackwardScanner) Line() (line string, start int64, err error) {
 	if s.err != nil {
 		return "", 0, s.err
 	}
@@ -45,7 +45,7 @@ func (s *Scanner) Line() (line string, start int64, err error) {
 		lineStart := bytes.LastIndexByte(s.buf, '\n')
 		if lineStart >= 0 { // we have a complete line
 			var line string
-			line, s.buf = string(s.buf[lineStart+1:]), s.buf[:lineStart]
+			line, s.buf = string(dropCR(s.buf[lineStart+1:])), s.buf[:lineStart]
 			return line, s.pos + int64(lineStart) + int64(1), nil
 		}
 		// need more data
@@ -53,10 +53,18 @@ func (s *Scanner) Line() (line string, start int64, err error) {
 		if s.err != nil {
 			if s.err == io.EOF {
 				if len(s.buf) > 0 {
-					return string(s.buf), 0, nil
+					return string(dropCR(s.buf)), 0, nil
 				}
 			}
 			return "", 0, s.err
 		}
 	}
+}
+
+// dropCR drops a terminal \r from the data.
+func dropCR(data []byte) []byte {
+	if len(data) > 0 && data[len(data)-1] == '\r' {
+		return data[0 : len(data)-1]
+	}
+	return data
 }

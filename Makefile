@@ -10,5 +10,10 @@ docker-start: build ## uses docker-compose to build and run inbound image
 docker-stop:  ## uses docker-compose to stop the containers
 	@docker-compose down --remove-orphans
 
+test: ## run tests within the container
+	@docker build -t tests .
+	@docker-compose up tests
+
 clean: ## cleans up local images
 	@docker rmi -f log-analyzer || true
+	@docker rmi -f tests || true
