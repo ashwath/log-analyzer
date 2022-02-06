@@ -23,15 +23,16 @@ COPY test-files /var/log/.
 EXPOSE 4200
 CMD ["/usr/local/bin/log-analyzer"]
 
-##
-# Used to run unit tests code using go docker container
-##
-FROM  golang:1.16-alpine AS tests
-WORKDIR /app
-COPY . ./
-
-## Need jq to parse the json output
-RUN apk add build-base && apk add jq
-
-## First jq command only runs if go test pass.  Second only when go test fails
-RUN go test --mod=vendor -v -coverprofile=coverage.out -tags=unit -json ./...
+###
+## Used to run unit tests within docker container
+## Eliminates the need to have golang installed locally
+###
+#FROM  golang:1.16-alpine AS tests
+#WORKDIR /app
+#COPY . ./
+#
+### Need jq to parse the json output
+#RUN apk add build-base && apk add jq
+#
+### First jq command only runs if go test pass.  Second only when go test fails
+#RUN go test --mod=vendor -v -coverprofile=coverage.out -tags=unit -json ./...

@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"logAnalyzer/config"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -16,7 +15,6 @@ const (
 // Handler implements http.Handler
 type Handler struct {
 	router http.Handler
-	cfg    config.Config
 }
 
 // ServeHTTP serves HTTP
@@ -27,9 +25,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // New returns a server allowing for dependency injection
 func New(opts ...func(h *Handler)) (*Handler, error) {
 
-	h := &Handler{
-		cfg: config.Get(),
-	}
+	h := &Handler{}
 
 	for _, opt := range opts {
 		opt(h)

@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -12,14 +11,6 @@ const (
 	logFilesPath         = "/var/log"
 	defaultLogEntryLimit = 20
 	defaultLastN         = 10
-)
-
-var (
-	fileNameErr       = errors.New("filename not provided")
-	numberLogLinesErr = errors.New("invalid input for 'logs lines'")
-	nextCursorErr     = errors.New("invalid input for 'next cursor'")
-	searchKeyWordErr  = errors.New("search keyword not provided")
-	pagingMetadataErr = errors.New("invalid metadata provided to page the results")
 )
 
 type Response struct {
@@ -48,8 +39,8 @@ func GetLogLimit(r *http.Request) (int, error) {
 	if len(limitStr) > 0 {
 		limitReq, err := strconv.Atoi(limitStr)
 		if err != nil {
-			log.WithError(err).Error(numberLogLinesErr)
-			return 0, numberLogLinesErr
+			log.WithError(err).Error(limitErr)
+			return 0, limitErr
 		}
 		if limitReq > 0 {
 			limit = limitReq
@@ -64,8 +55,8 @@ func GetLastN(r *http.Request) (int, error) {
 	if len(lastNStr) > 0 {
 		lastNReq, err := strconv.Atoi(lastNStr)
 		if err != nil {
-			log.WithError(err).Error(numberLogLinesErr)
-			return 0, numberLogLinesErr
+			log.WithError(err).Error(lastNErr)
+			return 0, lastNErr
 		}
 		if lastNReq > 0 {
 			lastN = lastNReq
@@ -93,10 +84,10 @@ func GetNextFile(r *http.Request) string {
 	return nextFile
 }
 
-func GetSearchKeyword(r *http.Request) (string, error) {
+func GetSearchKeyword(r *http.Request) string {
 	keyword := r.FormValue("keyword")
 	if len(keyword) == 0 {
-		log.Debugf("search keyword not provided")
+		log.Infof("Search keyword not provided, will tail logs")
 	}
-	return keyword, nil
+	return keyword
 }

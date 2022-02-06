@@ -19,17 +19,14 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// fetch number of log lines requested
-	keyword, err := GetSearchKeyword(r)
-	if err != nil {
-		return err
-	}
+	keyword := GetSearchKeyword(r)
 
 	// fetch filename
 	var allLogFiles bool
 	fileName := GetFileName(r)
 	if len(fileName) == 0 {
 		allLogFiles = true
-		log.Debugf("Requested to search across all log files, filename: %+v\n", fileName)
+		log.Infof("Requested to search across all log files, filename: %+v\n", fileName)
 	}
 
 	cursor, err := GetNextCursor(r)
@@ -38,7 +35,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	nextFile := GetNextFile(r)
-	if len(nextFile) == 0 && cursor != 0 {
+	if len(nextFile) == 0 && cursor != 0 { // cursor is provided but next_file is not provided
 		return pagingMetadataErr
 	}
 
@@ -83,6 +80,9 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		// fetch corresponding log lines
 		path := logFilesPath + "/" + fileName
+		if nextFile != path {
+			return invalidNextFileErr
+		}
 		err := scanLogFile(path, keyword, limit, cursor, &response)
 		if err != nil {
 			return err
