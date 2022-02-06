@@ -5,16 +5,16 @@ import (
 	"io"
 )
 
-const DefaultChunkSize = 1024
+const DefaultChunkSize = int64(1024)
 
 type Scanner struct {
 	r   io.ReaderAt
-	pos int
+	pos int64
 	err error
 	buf []byte
 }
 
-func NewScanner(r io.ReaderAt, pos int) *Scanner {
+func NewScanner(r io.ReaderAt, pos int64) *Scanner {
 	return &Scanner{r: r, pos: pos}
 }
 
@@ -28,7 +28,7 @@ func (s *Scanner) readMore() {
 		size = s.pos
 	}
 	s.pos -= size
-	buf2 := make([]byte, size, size+len(s.buf))
+	buf2 := make([]byte, size, size+int64(len(s.buf)))
 
 	// ReadAt attempts to read full buff!
 	_, s.err = s.r.ReadAt(buf2, int64(s.pos))
@@ -37,7 +37,7 @@ func (s *Scanner) readMore() {
 	}
 }
 
-func (s *Scanner) Line() (line string, start int, err error) {
+func (s *Scanner) Line() (line string, start int64, err error) {
 	if s.err != nil {
 		return "", 0, s.err
 	}
@@ -46,7 +46,7 @@ func (s *Scanner) Line() (line string, start int, err error) {
 		if lineStart >= 0 { // we have a complete line
 			var line string
 			line, s.buf = string(s.buf[lineStart+1:]), s.buf[:lineStart]
-			return line, s.pos + lineStart + 1, nil
+			return line, s.pos + int64(lineStart) + int64(1), nil
 		}
 		// need more data
 		s.readMore()

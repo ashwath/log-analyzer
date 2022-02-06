@@ -1,9 +1,9 @@
 package analyzer
 
 import (
-	"bufio"
 	"encoding/json"
 	"io"
+	"logAnalyzer/internal/file_utils"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,37 +13,30 @@ import (
 )
 
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
-	log.Infof("http.Request: %+v\n", *r)
-
 	// fetch number of log entries requested
 	limit, err := GetLogLimit(r)
 	if err != nil {
 		return err
 	}
-	log.Infof("logs: %+v\n", limit)
 
 	// fetch number of log lines requested
 	keyword, err := GetSearchKeyword(r)
 	if err != nil {
 		return err
 	}
-	log.Infof("keyword: %+v\n", keyword)
 
 	// fetch filename
 	var allLogFiles bool
 	fileName := GetFileName(r)
 	if len(fileName) == 0 {
 		allLogFiles = true
-		log.Infof("Requested to search across all log files, filename: %+v\n", fileName)
-	} else {
-		log.Infof("filename: %+v\n", fileName)
+		log.Debugf("Requested to search across all log files, filename: %+v\n", fileName)
 	}
 
 	cursor, err := GetNextCursor(r)
 	if err != nil {
 		return err
 	}
-	log.Infof("cursor: %+v\n", cursor)
 
 	nextFile := GetNextFile(r)
 	if len(nextFile) == 0 && cursor != 0 {
@@ -64,7 +57,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 				if err != nil {
 					return err
 				}
-				log.Debugf("path:%v, info.Size():%v\n", path, info.Size())
+				log.Infof("path:%v, info.Size():%v\n", path, info.Size())
 				if len(nextFile) > 0 {
 					if path == nextFile {
 						startScaning = true
@@ -100,30 +93,37 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	// encode the results to http.ResponseWriter
 	enc := json.NewEncoder(w)
 	return enc.Encode(response)
-	return nil
 }
 
 func ScanLogFile(filepath, keyword string, limit int, cursor int64, response *Response) error {
 	log.Infof("Scaning file: %v\n", filepath)
 	file, err := os.Open(filepath)
 	if err != nil {
-		log.Fatal(err)
+		log.Errorf("File not found, %v", err)
+		return err
 	}
 	defer file.Close()
 
-	file.Seek(cursor, 0)
-	reader := bufio.NewReader(file)
-	logs := []string{}
-	for {
-		bytes, err := read(reader)
+	if cursor == 0 { // cursor not provided,
+		fi, err := file.Stat() // returns file info
 		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			log.Errorf("Error while reading the file %v\n", err)
+			log.Error(err)
 			return err
 		}
-		line := string(bytes)
+		cursor = fi.Size() // start with EOF and scan backwards
+	}
+
+	scanner := file_utils.NewScanner(file, cursor) // set pos to end of file
+	logs := []string{}
+	for {
+		// read a line
+		line, _, err := scanner.Line()
+		if err != nil {
+			log.Error(err)
+			break
+		}
+
+		// scan the line if keyword exists
 		if len(keyword) > 0 {
 			if limit > 0 && strings.Contains(line, keyword) {
 				logs = append(logs, line)
@@ -136,7 +136,6 @@ func ScanLogFile(filepath, keyword string, limit int, cursor int64, response *Re
 
 		// check if limit is reached
 		if limit == 0 {
-			log.Infof("limit == 0")
 			results := response.Results
 			results = append(results, SearchResults{FileName: filepath, LogEntries: logs})
 			response.Results = results
@@ -147,6 +146,7 @@ func ScanLogFile(filepath, keyword string, limit int, cursor int64, response *Re
 				return err
 			}
 			response.MetaData.NextCursor = offset
+			return nil
 		}
 	}
 

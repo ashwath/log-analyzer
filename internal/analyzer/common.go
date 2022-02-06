@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"bufio"
 	"errors"
 	"net/http"
 	"strconv"
@@ -102,28 +101,4 @@ func GetSearchKeyword(r *http.Request) (string, error) {
 		//return keyword, errors.New("search keyword not provided")
 	}
 	return keyword, nil
-}
-
-// Reads each line at a time
-func read(r *bufio.Reader) ([]byte, error) {
-	var (
-		isPrefix = true
-		err      error
-		line, ln []byte
-	)
-
-	for isPrefix && err == nil {
-		/*
-			// ReadLine is a low-level line-reading primitive
-			// ReadLine tries to return a single line, not including the end-of-line bytes.
-			// If the line was too long for the buffer then isPrefix is set and the
-			// beginning of the line is returned. The rest of the line will be returned
-			// from future calls. isPrefix will be false when returning the last fragment
-			// of the line
-		*/
-		line, isPrefix, err = r.ReadLine()
-		ln = append(ln, line...)
-	}
-
-	return ln, err
 }

@@ -46,19 +46,15 @@ func (h *Handler) fetchLastN(fileName string, n int) (Response, error) {
 		return Response{}, err
 	}
 	defer f.Close()
-	log.Printf("fileName:%v lastN:%v\n", fileName, n)
-	scanner := file_utils.NewScanner(f, int(fi.Size())) // set pos to end of file
+	scanner := file_utils.NewScanner(f, fi.Size()) // set pos to end of file
 	logs := []string{}
 	for {
-		log.Println("here")
 		line, _, err := scanner.Line()
 		if err != nil {
-			log.Println("here")
 			log.Error(err)
 			return Response{}, err
 			break
 		}
-		log.Printf("line: %s\n", line)
 		logs = append(logs, line)
 		if len(logs) == n {
 			break
