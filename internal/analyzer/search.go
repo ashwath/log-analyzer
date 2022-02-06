@@ -16,7 +16,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	log.Infof("http.Request: %+v\n", *r)
 
 	// fetch number of log entries requested
-	limit, err := GetLogEntryLimit(r)
+	limit, err := GetLogLimit(r)
 	if err != nil {
 		return err
 	}
@@ -124,11 +124,19 @@ func ScanLogFile(filepath, keyword string, limit int, cursor int64, response *Re
 			return err
 		}
 		line := string(bytes)
-		if limit > 0 && strings.Contains(line, keyword) {
+		if len(keyword) > 0 {
+			if limit > 0 && strings.Contains(line, keyword) {
+				logs = append(logs, line)
+				limit--
+			}
+		} else {
 			logs = append(logs, line)
 			limit--
 		}
+
+		// check if limit is reached
 		if limit == 0 {
+			log.Infof("limit == 0")
 			results := response.Results
 			results = append(results, SearchResults{FileName: filepath, LogEntries: logs})
 			response.Results = results
@@ -138,8 +146,7 @@ func ScanLogFile(filepath, keyword string, limit int, cursor int64, response *Re
 				log.Errorf("Error while finindg file:%s offset %v\n", filepath, err)
 				return err
 			}
-			response.MetaData.NextCursor = offset + 1
-
+			response.MetaData.NextCursor = offset
 		}
 	}
 
@@ -147,37 +154,6 @@ func ScanLogFile(filepath, keyword string, limit int, cursor int64, response *Re
 		results := response.Results
 		results = append(results, SearchResults{FileName: filepath, LogEntries: logs})
 		response.Results = results
-		response.MetaData.NextFile = filepath
-		offset, err := file.Seek(0, io.SeekCurrent) // offset is the current position
-		if err != nil {
-			log.Errorf("Error while finindg file:%s offset %v\n", filepath, err)
-			return err
-		}
-		response.MetaData.NextCursor = offset + 1
 	}
 	return nil
-}
-
-// Reads each line at a time
-func read(r *bufio.Reader) ([]byte, error) {
-	var (
-		isPrefix = true
-		err      error
-		line, ln []byte
-	)
-
-	for isPrefix && err == nil {
-		/*
-			// ReadLine is a low-level line-reading primitive
-			// ReadLine tries to return a single line, not including the end-of-line bytes.
-			// If the line was too long for the buffer then isPrefix is set and the
-			// beginning of the line is returned. The rest of the line will be returned
-			// from future calls. isPrefix will be false when returning the last fragment
-			// of the line
-		*/
-		line, isPrefix, err = r.ReadLine()
-		ln = append(ln, line...)
-	}
-
-	return ln, err
 }
