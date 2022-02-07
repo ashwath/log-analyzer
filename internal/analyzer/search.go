@@ -80,7 +80,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		// fetch corresponding log lines
 		path := logFilesPath + "/" + fileName
-		if nextFile != path {
+		if len(nextFile) > 0 && nextFile != path {
 			return invalidNextFileErr
 		}
 		err := scanLogFile(path, keyword, limit, cursor, &response)

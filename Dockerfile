@@ -4,8 +4,9 @@
 FROM golang:1.16-alpine AS builder
 WORKDIR /app
 COPY . .
-
+RUN apk add build-base && apk add jq
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod vendor -ldflags="-w -s" -o /bin/log-analyzer ./cmd/...
+RUN go test --mod=vendor -v -coverprofile=coverage.out -tags=unit -json ./...
 
 ##
 # Starts conatiner log-analyzer using output of @builder
@@ -22,17 +23,3 @@ COPY test-files /var/log/.
 
 EXPOSE 4200
 CMD ["/usr/local/bin/log-analyzer"]
-
-###
-## Used to run unit tests within docker container
-## Eliminates the need to have golang installed locally
-###
-#FROM  golang:1.16-alpine AS tests
-#WORKDIR /app
-#COPY . ./
-#
-### Need jq to parse the json output
-#RUN apk add build-base && apk add jq
-#
-### First jq command only runs if go test pass.  Second only when go test fails
-#RUN go test --mod=vendor -v -coverprofile=coverage.out -tags=unit -json ./...
