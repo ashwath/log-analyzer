@@ -15,32 +15,6 @@ $ make {command}
 
 ## API definitions
 
-### Response Codes
-```
-200: Success
-400: Bad request
-50X: Server Error
-```
-
-### Example Error Messages
-```json
-{
-  "status": 400,
-  "name": "Bad Request",
-  "message": "invalid input for {limit}",
-  "internal_message": "invalid input for {limit}"
-}
-```
-
-```json
-{
-  "status": 500,
-  "name": "Internal Server Error",
-  "message": "open /var/log/sam.log: no such file or directory",
-  "internal_message": "open /var/log/sam.log: no such file or directory"
-}
-```
-
 ## Tail API
 ### URL 
 `v1/logs/tail`
@@ -143,7 +117,7 @@ URL: 'http://localhost:4200/v1/logs/search?limit=5&file_name=sample.log&keyword=
 } 
 ```
 
-**Request#2:**
+**Request #2:**
 ```
 URL: 'http://localhost:4200/v1/logs/search?limit=5&file_name=sample.log&next_cursor=98978&next_file=/var/log/sample.log' 
 ```
@@ -167,4 +141,26 @@ URL: 'http://localhost:4200/v1/logs/search?limit=5&file_name=sample.log&next_cur
     "next_cursor": 98687
   }
 }
+```
+
+**Request #3:**
+```
+URL: 'http://localhost:4200/v1/logs/search?limit=xxx&file_name=sample.log' 
+```
+**Error Response:**
+```json
+{
+  "status": 400,
+  "name": "Bad Request",
+  "message": "invalid input for {limit}",
+  "internal_message": "invalid input for {limit}"
+}
+```
+
+
+### Response Codes
+```
+200: Success
+400: Bad request
+500: Server Error
 ```
