@@ -15,25 +15,26 @@ $ make {command}
 
 ## API definitions
 
-## Tail API
-### URL 
+
+### Tail endpoint
+#### URL 
 `v1/logs/tail`
 
-### Method 
+#### Method 
 `GET`
 
-### URL Params
+#### URL Params
 
-#### Required
+##### Required
 * Log file name: `file_name=[alphanumeric]`
 
-#### Optional
+##### Optional
 * Last n log enteries, defaults to 20: `lastN=[integer]`
 
-#### Notes
+##### Notes
 * Results are returned in reverse time ordered
 
-### Examples
+#### Examples
 **Request:**
 ```
 URL: 'http://localhost:4200/v1/logs/tail?file_name=sample.log&lastN=5' 
@@ -75,24 +76,24 @@ URL: 'http://localhost:4200/v1/logs/tail?file_name=xxxx'
 ```
 
 
-## Search API
-### URL
+### Search endpoint
+#### URL
 `v1/logs/search`
 
-### Method
+#### Method
 `GET`
 
-### URL Params
-#### Optional
+#### URL Params
+##### Optional
 * Log file name, defaults to all log files: `file_name=[alphanumeric]`
 * Search Keyword, defaults to all log enteries: `keyword=[alphanumeric]`
 * Number of log entries, defaults to 20: `limit=[integer]`
 * Paging metadata: `next_cursor=[integer]` & `next_file=[aphanumeric]`
 
-#### Notes
+##### Notes
 * Results are returned in reverse time ordered
 
-### Examples
+#### Examples
 **Request #1:**
 ```
 URL: 'http://localhost:4200/v1/logs/search?limit=5&file_name=sample.log&keyword=5305' 
