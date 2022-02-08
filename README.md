@@ -56,16 +56,16 @@ $ make {command}
 #### Optional
 * Last n log enteries, defaults to 20: `lastN=[integer]`
 
+#### Notes
+* Results are returned in reverse time ordered
+
 ### Examples
 **Request:**
-```json
-POST /login HTTP/1.1
+```
 URL: 'http://localhost:4200/v1/logs/tail?file_name=sample.log&lastN=5' 
 ```
 **Successful Response:**
 ```json
-HTTP/1.1 200 OK
-Content-Type: application/json
 {
   "results": [
     {
@@ -87,8 +87,7 @@ Content-Type: application/json
 ```
 
 **Request:**
-```json
-POST /login HTTP/1.1
+```
 URL: 'http://localhost:4200/v1/logs/tail?file_name=xxxx' 
 ```
 **Error Response:**
@@ -116,16 +115,16 @@ URL: 'http://localhost:4200/v1/logs/tail?file_name=xxxx'
 * Number of log entries, defaults to 20: `limit=[integer]`
 * Paging metadata: `next_cursor=[integer]` & `next_file=[aphanumeric]`
 
+#### Notes
+* Results are returned in reverse time ordered
+
 ### Examples
 **Request #1:**
-```json
-POST /login HTTP/1.1
+```
 URL: 'http://localhost:4200/v1/logs/search?limit=5&file_name=sample.log&keyword=5305' 
 ```
 **Successful Response #1:**
 ```json
-HTTP/1.1 200 OK
-Content-Type: application/json
 {
   "results": [
     {
@@ -145,8 +144,7 @@ Content-Type: application/json
 ```
 
 **Request#2:**
-```json
-POST /login HTTP/1.1
+```
 URL: 'http://localhost:4200/v1/logs/search?limit=5&file_name=sample.log&next_cursor=98978&next_file=/var/log/sample.log' 
 ```
 **Successful Response #2:**

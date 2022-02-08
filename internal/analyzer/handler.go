@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -24,9 +23,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // New returns a server allowing for dependency injection
 func New(opts ...func(h *Handler)) (*Handler, error) {
-
 	h := &Handler{}
-
 	for _, opt := range opts {
 		opt(h)
 	}
@@ -37,8 +34,5 @@ func New(opts ...func(h *Handler)) (*Handler, error) {
 		r.Handle(getTailPath, HandleError(h.tailLogs)).Methods(http.MethodGet)
 		h.router = r
 	}
-
-	log.Debug("server created")
-
 	return h, nil
 }

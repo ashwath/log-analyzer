@@ -15,4 +15,3 @@ docker-stop:  ## uses docker-compose to stop the containers
 
 clean: ## cleans up local images
 	@docker rmi -f log-analyzer || true
-

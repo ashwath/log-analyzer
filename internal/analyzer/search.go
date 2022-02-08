@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Search within log files
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	// fetch number of log entries requested
 	limit, err := GetLogLimit(r)
@@ -53,7 +54,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 				if err != nil {
 					return err
 				}
-				log.Infof("path:%v, info.Size():%v\n", path, info.Size())
+				log.Debugf("path:%v, info.Size():%v\n", path, info.Size())
 				if len(nextFile) > 0 {
 					if path == nextFile {
 						startScaning = true
@@ -94,8 +95,8 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) error {
 	return enc.Encode(response)
 }
 
+// Scans file & search logs enteries with keyword
 func scanLogFile(filepath, keyword string, limit int, cursor int64, response *Response) error {
-	log.Debugf("Scaning file: %v\n", filepath)
 	file, err := os.Open(filepath)
 	if err != nil {
 		log.Errorf("File not found, %v", err)

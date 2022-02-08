@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// tail the log files
 func (h *Handler) tailLogs(w http.ResponseWriter, r *http.Request) error {
 	// fetch Filename
 	fileName := GetFileName(r)
@@ -34,6 +35,7 @@ func (h *Handler) tailLogs(w http.ResponseWriter, r *http.Request) error {
 	return enc.Encode(results)
 }
 
+// fetch last n log enteries from the file provided
 func (h *Handler) fetchLastN(fileName string, n int) (Response, error) {
 	f, err := os.Open(logFilesPath + "/" + fileName)
 	if err != nil {

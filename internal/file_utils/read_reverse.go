@@ -14,10 +14,12 @@ type BackwardScanner struct {
 	buf []byte
 }
 
+// NewBackwardScanner creates custom scanner to read file backwards
 func NewBackwardScanner(r io.ReaderAt, pos int64) *BackwardScanner {
 	return &BackwardScanner{r: r, pos: pos}
 }
 
+// Read the next chunk of bytes
 func (s *BackwardScanner) readMore() {
 	if s.pos == 0 {
 		s.err = io.EOF
@@ -37,6 +39,7 @@ func (s *BackwardScanner) readMore() {
 	}
 }
 
+// Line returns next line, while reading file backwards
 func (s *BackwardScanner) Line() (line string, start int64, err error) {
 	if s.err != nil {
 		return "", 0, s.err
@@ -48,7 +51,7 @@ func (s *BackwardScanner) Line() (line string, start int64, err error) {
 			line, s.buf = string(dropCR(s.buf[lineStart+1:])), s.buf[:lineStart]
 			return line, s.pos + int64(lineStart) + int64(1), nil
 		}
-		// need more data
+		// need more data, was not able to the delimtere "\n"
 		s.readMore()
 		if s.err != nil {
 			if s.err == io.EOF {
