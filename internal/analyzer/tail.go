@@ -13,8 +13,8 @@ func (h *Handler) tailLogs(w http.ResponseWriter, r *http.Request) error {
 	// fetch Filename
 	fileName := GetFileName(r)
 	if len(fileName) == 0 {
-		log.WithError(fileNameErr)
-		return fileNameErr
+		log.WithError(FileNameErr)
+		return FileNameErr
 	}
 
 	// fetch number of log lines requested

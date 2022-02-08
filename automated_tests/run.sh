@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 
-echo "Running local services"
+echo "Building and Starting the Container:"
 # start docker
 docker-compose down || true
 docker build -t log-analyzer .
 docker-compose up -d log-analyzer
 
-echo "Running integration tests"
-# run ITs
-ROOT_DIR=$(git rev-parse --show-toplevel)
-go clean -testcache
-go test -v -p 1 -timeout 5m -tags=integration $ROOT_DIR/automated_tests/...
+echo "Running Automated Tests"
+docker run --rm -e HOME -v "$HOME":"$HOME" -w "$PWD" --network="host" golang go test -v -p 1 -timeout 5m -tags=integration ./...
 
-
-#docker-compose down
+echo "Shutting Down the Container"
+#stop log-analyzer
+docker-compose down

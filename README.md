@@ -1,4 +1,4 @@
-# log-analyzer
+# Log Analyzer
 Service for log analysis 
 - keyword search
 - tail logs
@@ -6,16 +6,16 @@ Service for log analysis
 ## Installation
 
 ### Dependencies
-
 * docker, install using https://docs.docker.com/get-docker/
 
 ## Usage
-
-Checkout the Makefile
-
-e.x. make command to start the service
+Checkout the Makefile 
 ```bash
-$ make docker-start
+$ make {command}
 ``` 
 
 ## API definitions
+### Search
+Params
+
+### Tail

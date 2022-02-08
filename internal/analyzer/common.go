@@ -39,8 +39,8 @@ func GetLogLimit(r *http.Request) (int, error) {
 	if len(limitStr) > 0 {
 		limitReq, err := strconv.Atoi(limitStr)
 		if err != nil {
-			log.WithError(err).Error(limitErr)
-			return 0, limitErr
+			log.WithError(err).Error(LimitErr)
+			return 0, LimitErr
 		}
 		if limitReq > 0 {
 			limit = limitReq
@@ -55,8 +55,8 @@ func GetLastN(r *http.Request) (int, error) {
 	if len(lastNStr) > 0 {
 		lastNReq, err := strconv.Atoi(lastNStr)
 		if err != nil {
-			log.WithError(err).Error(lastNErr)
-			return 0, lastNErr
+			log.WithError(err).Error(LastNErr)
+			return 0, LastNErr
 		}
 		if lastNReq > 0 {
 			lastN = lastNReq
@@ -71,8 +71,8 @@ func GetNextCursor(r *http.Request) (int64, error) {
 	if len(cursorStr) > 0 {
 		cursorProvided, err := strconv.ParseInt(cursorStr, 10, 64)
 		if err != nil || cursorProvided < 0 {
-			log.WithError(err).Error(nextCursorErr)
-			return cursor, nextCursorErr
+			log.WithError(err).Error(NextCursorErr)
+			return cursor, NextCursorErr
 		}
 		cursor = cursorProvided
 	}

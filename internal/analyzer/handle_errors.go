@@ -9,17 +9,17 @@ import (
 )
 
 var (
-	fileNameErr        = errors.New("{file_name} not provided")
-	lastNErr           = errors.New("invalid input for {lastN}")
-	limitErr           = errors.New("invalid input for {limit}")
-	nextCursorErr      = errors.New("invalid input for {next_cursor}")
-	searchKeywordErr   = errors.New("search {keyword} not provided")
-	pagingMetadataErr  = errors.New("invalid metadata provided, please provide {next_file} with {cursor}")
-	invalidNextFileErr = errors.New("invalid input combination for {next_file} & {file_name}")
+	FileNameErr        = errors.New("{file_name} not provided")
+	LastNErr           = errors.New("invalid input for {lastN}")
+	LimitErr           = errors.New("invalid input for {limit}")
+	NextCursorErr      = errors.New("invalid input for {next_cursor}")
+	SearchKeywordErr   = errors.New("search {keyword} not provided")
+	PagingMetadataErr  = errors.New("invalid metadata provided, please provide {next_file} with {cursor}")
+	InvalidNextFileErr = errors.New("invalid input combination for {next_file} & {file_name}")
 )
 
-// apiError error response for API requests
-type apiError struct {
+// ErrorResponse error response for API requests
+type ErrorResponse struct {
 	Status          int    `json:"status"`
 	Name            string `json:"name"`
 	Message         string `json:"message"`
@@ -37,10 +37,10 @@ func HandleError(f handler) http.HandlerFunc {
 		}
 		log.WithError(err).Error(errors.WithStack(err))
 
-		var e apiError
+		var e ErrorResponse
 		switch err {
-		case fileNameErr, limitErr, lastNErr, nextCursorErr, searchKeywordErr, pagingMetadataErr:
-			e = apiError{
+		case FileNameErr, LimitErr, LastNErr, NextCursorErr, SearchKeywordErr, PagingMetadataErr, InvalidNextFileErr:
+			e = ErrorResponse{
 				Status:          http.StatusBadRequest,
 				Name:            http.StatusText(http.StatusBadRequest),
 				Message:         err.Error(),
@@ -49,7 +49,7 @@ func HandleError(f handler) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 
 		default:
-			e = apiError{
+			e = ErrorResponse{
 				Status:          http.StatusInternalServerError,
 				Name:            http.StatusText(http.StatusInternalServerError),
 				Message:         err.Error(),
